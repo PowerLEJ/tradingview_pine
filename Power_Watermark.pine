@@ -1,0 +1,65 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © ej28power
+
+//@version=5
+indicator("Power Watermark", "", true)
+
+width = 0
+height = 0
+
+WHITE = color.new(color.white, 0)
+YELLOW = color.new(color.yellow, 0)
+BLUE = color.new(color.blue, 70)
+
+symInfo = syminfo.prefix + ' : ' + syminfo.ticker // 거래소 : 종목명
+date = '종료일: ' + str.tostring(year(time_close)) + '-' + str.tostring(month(time_close)) + '-' + str.tostring(dayofmonth(time_close))
+period = '기간: ' + timeframe.period + (timeframe.isminutes ? 'M' : na)
+
+var Watermark_settings = "메모장"
+showWatermark = input.bool(true, "메모장 보기", inline = "WM1", group = Watermark_settings)
+
+if showWatermark
+
+    c_title = input.color(YELLOW, '종목 글자 색깔', inline = "WM01", group = Watermark_settings)
+    s_title = input.string("large", "종목 글자 크기", options = ["tiny", "small", "normal", "large", "huge", "auto"], inline = "WM02", group = Watermark_settings)
+
+    c_subtitle = input.color(WHITE, '메모 글자 색깔', inline = "WM03", group = Watermark_settings)
+    s_subtitle  = input.string("normal", "메모 글자 크기", options = ["tiny", "small", "normal", "large", "huge", "auto"], inline = "WM04", group = Watermark_settings)
+
+    a_title = input.string("center", "종목 수직 정렬", options = ["center","left", "right"], inline = "WM05", group = Watermark_settings)
+    a_subtitle = input.string("left", "메모 수직 정렬", options = ["center","left", "right"], inline = "WM06", group = Watermark_settings)
+
+    textVPosition = input.string("top", "메모장 수직 위치", options = ["top", "middle", "bottom"], inline = "WM07", group = Watermark_settings)
+    textHPosition = input.string("center", "메모장 수평 위치", options = ["left", "center", "right"], inline = "WM08", group = Watermark_settings)
+
+    title = symInfo
+
+    textWatermark = table.new(textVPosition + '_' + textHPosition, 1, 8)
+
+    table.cell(textWatermark, 0, 0, " ", width, height, c_title, a_title, text_size=s_title, bgcolor=BLUE)
+    table.cell(textWatermark, 0, 1, title, width, height, c_title, a_title, text_size=s_title, bgcolor=BLUE)
+    table.cell(textWatermark, 0, 2, '1) 확인일', width, height, c_subtitle, a_subtitle, text_size=s_subtitle, bgcolor=BLUE)
+    table.cell(textWatermark, 0, 3, '2) 펀더멘탈', width, height, c_subtitle, a_subtitle, text_size=s_subtitle, bgcolor=BLUE)
+    table.cell(textWatermark, 0, 4, '3) 이동평균선', width, height, c_subtitle, a_subtitle, text_size=s_subtitle, bgcolor=BLUE)
+    table.cell(textWatermark, 0, 5, '4) 매물대', width, height, c_subtitle, a_subtitle, text_size=s_subtitle, bgcolor=BLUE)
+    table.cell(textWatermark, 0, 6, '5) 거래량', width, height, c_subtitle, a_subtitle, text_size=s_subtitle, bgcolor=BLUE)
+    table.cell(textWatermark, 0, 7, '6) 기타', width, height, c_subtitle, a_subtitle, text_size=s_subtitle, bgcolor=BLUE)
+
+
+var date_settings = "날짜 정보"
+dateInfoCheck = input.bool(title='날짜 정보', defval=true, inline = "DATE1", group = date_settings)
+
+if dateInfoCheck == true
+    c_dateInfo = input.color(WHITE, '날짜 글자 색깔', inline = "DATE01", group = date_settings)
+    s_dateInfo  = input.string("normal", "날짜 글자 크기", options = ["tiny", "small", "normal", "large", "huge", "auto"], inline = "DATE02", group = date_settings)
+
+    a_dateInfo = input.string("left", "날짜 수직 정렬", options = ["center","left", "right"], inline = "DATE03", group = date_settings)
+
+    dateVPosition = input.string("top", "날짜 수직 위치", options = ["top", "middle", "bottom"], inline = "DATE04", group = date_settings)
+    dateHPosition = input.string("right", "날짜 수평 위치", options = ["left", "center", "right"], inline = "DATE05", group = date_settings)
+
+    dateWatermark = table.new(dateVPosition + '_' + dateHPosition, 5, 5)
+
+    table.cell(dateWatermark, 0, 0, '참고', width, height, c_dateInfo, a_dateInfo, text_size=s_dateInfo, bgcolor=BLUE)
+    table.cell(dateWatermark, 0, 1, date, width, height, c_dateInfo, a_dateInfo, text_size=s_dateInfo, bgcolor=BLUE)
+    table.cell(dateWatermark, 0, 2, period, width, height, c_dateInfo, a_dateInfo, text_size=s_dateInfo, bgcolor=BLUE)

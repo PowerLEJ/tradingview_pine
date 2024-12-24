@@ -1,0 +1,53 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © ej28power
+
+//@version=5
+indicator("Power Memo", "", true)
+
+width = 0
+height = 0
+
+TOP = "top"
+CENTER = "center"
+RIGHT = "right"
+LEFT = "left"
+
+LARGE = "large"
+NORMAL = "normal"
+SMALL = "small"
+
+WHITE = color.new(color.white, 0)
+RED = color.new(color.red, 0)
+YELLOW = color.new(color.yellow, 0)
+BLUE = color.new(color.blue, 70)
+
+
+symInfo = syminfo.prefix + ' : ' + syminfo.ticker // 거래소 : 종목명
+date = '종료일: ' + str.tostring(year(time_close)) + '-' + str.tostring(month(time_close)) + '-' + str.tostring(dayofmonth(time_close))
+period = '기간: ' + timeframe.period + (timeframe.isminutes ? 'M' : na)
+
+
+var Watermark_settings = "메모장"
+showWatermark = input.bool(true, "메모장 보기", inline = "WM1", group = Watermark_settings)
+
+if showWatermark
+
+    Memo = input.text_area("", group = Watermark_settings)
+
+    textWatermark = table.new(TOP + '_' + CENTER, 1, 3)
+
+    table.cell(textWatermark, 0, 0, " ", width, height, YELLOW, CENTER, text_size=SMALL, bgcolor=BLUE)
+    table.cell(textWatermark, 0, 1, symInfo, width, height, YELLOW, CENTER, text_size=LARGE, bgcolor=BLUE)
+    table.cell(textWatermark, 0, 2, Memo, width, height, RED, LEFT, text_size=NORMAL, bgcolor=BLUE)
+
+
+var date_settings = "날짜 정보"
+dateInfoCheck = input.bool(title='날짜 정보', defval=true, inline = "DATE1", group = date_settings)
+
+if dateInfoCheck == true
+
+    dateWatermark = table.new(TOP + '_' + RIGHT, 5, 5)
+
+    table.cell(dateWatermark, 0, 0, '참고', width, height, WHITE, LEFT, text_size=NORMAL, bgcolor=BLUE)
+    table.cell(dateWatermark, 0, 1, date, width, height, WHITE, LEFT, text_size=NORMAL, bgcolor=BLUE)
+    table.cell(dateWatermark, 0, 2, period, width, height, WHITE, LEFT, text_size=NORMAL, bgcolor=BLUE)

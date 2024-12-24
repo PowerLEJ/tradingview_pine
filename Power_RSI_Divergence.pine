@@ -1,0 +1,138 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © ej28power
+
+//@version=5
+indicator("Power RSI Divergence", shorttitle="Power RSI Divergence", overlay=true)
+
+// 참고: https://courses.theartoftrading.com/pages/how-to-detect-rsi-divergence-in-pine-script
+
+// 손절, 익절 설정
+float percent = 0.01
+float minus_percent =  input.float(title = "손절 %", defval = 2) // 0.5%
+float plus_percent = input.float(title = "익절 %", defval = 5) // 2%
+
+minus_percent := percent * minus_percent
+plus_percent := percent * plus_percent
+
+float short_minus_time = 1 + minus_percent // -?% Short 손절
+float short_plus_time = 1 - plus_percent // +?% Short 익절
+float long_minus_time = 1 - minus_percent // -?% Long 손절
+float long_plus_time = 1 + plus_percent // +?% Long 익절
+
+// Get user input
+int i_MaxDistance       = input.int(title="최대 막대 갯수", defval=50)
+int i_RSI_Length        = input.int(title="RSI 길이", defval=14, minval=1)
+float i_RSI_Overbought  = input.float(title="RSI 과매수", defval=70.0)
+float i_RSI_Oversold    = input.float(title="RSI 과매도", defval=30.0)
+
+// Get RSI value
+rsiValue = ta.rsi(close, i_RSI_Length)
+
+// rsi 과매수, 과매도 구간
+rsi = ta.rsi(close, i_RSI_Length)
+rsiColor = color.black
+if rsi > i_RSI_Overbought
+    rsiColor := color.red
+else if rsi < i_RSI_Oversold
+    rsiColor := color.green
+plot(close, color=color.new(rsiColor, 85), style = plot.style_area, linewidth = 1)
+
+
+// --------- BULLISH DIVERGENCE --------- //
+var float checkFirstLow     = na
+var float initialLowPrice   = na
+var float initialLowRSI     = na
+var int initialLowIndex     = na
+bool bullishDivergence      = false
+float swingLowRSI           = ta.lowest(rsiValue, 5)
+
+// Save lowest low while RSI is oversold, and store it when market leaves OS condition
+if (rsiValue < i_RSI_Oversold or rsiValue[1] < i_RSI_Oversold)
+    if not na(initialLowPrice)
+        initialLowPrice := na
+    if na(checkFirstLow) or low < checkFirstLow
+        checkFirstLow := low
+        initialLowIndex := bar_index
+        initialLowRSI := swingLowRSI
+else
+    // RSI is no longer OS, save lowest price during OS condition and reset temporary low
+    if not na(checkFirstLow)
+        initialLowPrice := checkFirstLow
+    checkFirstLow := na
+
+// Check for a second low that is lower than the first, and with a higher RSI value, and within our max distance
+if low[1] < initialLowPrice and low > low[1] and swingLowRSI > initialLowRSI and bar_index - initialLowIndex <= i_MaxDistance
+    bullishDivergence := true
+    line.new(initialLowIndex, initialLowPrice, bar_index - 1, low[1], color=color.green, width=1, extend=extend.none)
+    line.new(initialLowIndex, initialLowPrice, bar_index - 1, low[1], color=color.new(color.green, 80), width=1, extend=extend.right) // just for extend line
+    initialLowPrice := na
+
+// Draw bearish divergence signal
+plotshape(bullishDivergence, "Bullish Divergence", shape.triangleup, location.belowbar, color.green)
+
+
+if bullishDivergence
+    // 롱 지정
+    label.new(x=bar_index, y=open, color=color.green, textcolor=color.white, style=label.style_label_left, size=size.small, text = "롱 " + str.tostring(open))
+
+    // // 손절 지정
+    // line.new(bar_index, open * long_minus_time, bar_index + 100, open * long_minus_time, color = color.new(color.lime, 80), width = 1, style=line.style_dotted)
+    // label.new(x=bar_index, y=open * long_minus_time, color=color.new(color.lime, 80), textcolor=color.white, style=label.style_label_up, size=size.small, text = "손절 " + str.tostring(open * long_minus_time))
+
+    // // 익절 지정
+    // line.new(bar_index, open * long_plus_time, bar_index + 100, open * long_plus_time, color = color.new(color.lime, 80), width = 1, style=line.style_dotted)
+    // label.new(x=bar_index, y=open * long_plus_time, color=color.new(color.lime, 80), textcolor=color.white, style=label.style_label_down, size=size.small, text = "익절 " + str.tostring(open * long_plus_time))
+
+
+// --------- BEARISH DIVERGENCE --------- //
+var float checkFirstHigh    = na
+var float initialHighPrice  = na
+var float initialHighRSI    = na
+var int initialHighIndex    = na
+bool bearishDivergence      = false
+float swingHighRSI          = ta.highest(rsiValue, 5)
+
+// Save highest high while RSI is overbought, and store it when market leaves OB condition
+if (rsiValue > i_RSI_Overbought or rsiValue[1] > i_RSI_Overbought)
+    if not na(initialHighPrice)
+        initialHighPrice := na
+    if na(checkFirstHigh) or high > checkFirstHigh
+        checkFirstHigh := high
+        initialHighIndex := bar_index
+        initialHighRSI := swingHighRSI
+else
+    // RSI is no longer OB, save highest price during OB condition and reset temporary high
+    if not na(checkFirstHigh)
+        initialHighPrice := checkFirstHigh
+    checkFirstHigh := na
+
+// Check for a second high that is higher than the first, and with a lower RSI value, and within our max distance
+if high[1] > initialHighPrice and high < high[1] and swingHighRSI < initialHighRSI and bar_index - initialHighIndex <= i_MaxDistance
+    bearishDivergence := true
+    line.new(initialHighIndex, initialHighPrice, bar_index - 1, high[1], color=color.red, width=1, extend=extend.none)
+    line.new(initialHighIndex, initialHighPrice, bar_index - 1, high[1], color=color.new(color.red, 80), width=1, extend=extend.right) // just for extend line
+    initialHighPrice := na
+
+// Draw bearish divergence signal
+plotshape(bearishDivergence, "Bearish Divergence", shape.triangledown, location.abovebar, color.red)
+
+if bearishDivergence
+    // 숏 지정
+    label.new(x=bar_index, y=open, color=color.red, textcolor=color.white, style=label.style_label_left, size=size.small, text = "숏 " + str.tostring(open))
+
+    // // 손절 지정
+    // line.new(bar_index, open * short_minus_time, bar_index + 100, open * short_minus_time, color = color.new(color.fuchsia, 80), width = 1, style=line.style_dotted)
+    // label.new(x=bar_index, y=open * short_minus_time, color=color.new(color.fuchsia, 80), textcolor=color.white, style=label.style_label_down, size=size.small, text = "손절 " + str.tostring(open * short_minus_time))
+
+    // // 익절 지정
+    // line.new(bar_index, open * short_plus_time, bar_index + 100, open * short_plus_time, color = color.new(color.fuchsia, 80), width = 1, style=line.style_dotted)
+    // label.new(x=bar_index, y=open * short_plus_time, color=color.new(color.fuchsia, 80), textcolor=color.white, style=label.style_label_up, size=size.small, text = "익절 " + str.tostring(open * short_plus_time))
+
+
+// --------- ALERTS --------- //
+if bearishDivergence
+    alert("숏 " + str.tostring(initialHighRSI - swingHighRSI, "#.##"), alert.freq_once_per_bar_close)
+if bullishDivergence
+    alert("롱 " + str.tostring(swingLowRSI - initialLowRSI, "#.##"), alert.freq_once_per_bar_close)
+alertcondition(bearishDivergence, "다이버전스 숏!", "숏~")
+alertcondition(bullishDivergence, "다이버전스 롱!", "롱~")

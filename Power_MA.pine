@@ -1,0 +1,112 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © ej28power
+
+//@version=5
+indicator("Power MA", shorttitle="Power MA", overlay=true)
+
+// 손절, 익절 설정
+float percent = 0.01
+float minus_percent =  input.float(title = "손절 %", defval = 5) // 5%
+float plus_percent = input.float(title = "익절 %", defval = 20) // 20%
+
+minus_percent := percent * minus_percent
+plus_percent := percent * plus_percent
+
+float short_minus_time = 1 + minus_percent // -?% Short 손절
+float short_plus_time = 1 - plus_percent // +?% Short 익절
+float long_minus_time = 1 - minus_percent // -?% Long 손절
+float long_plus_time = 1 + plus_percent // +?% Long 익절
+
+val_01 = input.int(5, title="05")
+val_02 = input.int(10, title="10")
+val_03 = input.int(20, title="20")
+val_04 = input.int(60, title="60")
+val_05 = input.int(120, title="120")
+val_06 = input.int(200, title="200")
+val_07 = input.int(300, title="300")
+
+ema_01 = plot(ta.ema(close, val_01), color=color.new(color.red, 0), style = plot.style_line, linewidth = 2, title="EMA_05")
+ema_02 = plot(ta.ema(close, val_02), color=color.new(color.orange, 0), style = plot.style_line, linewidth = 2, title="EMA_10")
+ema_03 = plot(ta.ema(close, val_03), color=color.new(color.yellow, 0), style = plot.style_line, linewidth = 2, title="EMA_20")
+ema_04 = plot(ta.ema(close, val_04), color=color.new(color.green, 0), style = plot.style_line, linewidth = 2, title="EMA_60")
+ema_05 = plot(ta.ema(close, val_05), color=color.new(color.blue, 0), style = plot.style_line, linewidth = 2, title="EMA_120")
+ema_06 = plot(ta.ema(close, val_06), color=color.new(color.navy, 0), style = plot.style_line, linewidth = 2, title="EMA_200")
+ema_07 = plot(ta.ema(close, val_07), color=color.new(color.purple, 0), style = plot.style_line, linewidth = 2, title="EMA_300")
+
+long_position_01 = false
+short_position_01 = false
+myColor = color.new(color.black, 100)
+if ta.ema(close, val_01) > ta.ema(close, val_04)
+    myColor := color.new(color.green, 80)
+    long_position_01 := true
+else
+    myColor := color.new(color.red, 80)
+    short_position_01 := true
+fill(ema_01, ema_04, myColor)
+
+long_position_02 = ta.crossover(ta.ema(close, val_01), ta.ema(close, val_04))
+short_position_02 = ta.crossunder(ta.ema(close, val_01), ta.ema(close, val_04))
+
+if long_position_02 and long_position_01
+    line.new(bar_index, close, bar_index, close * 0.01, color = color.new(color.blue, 50), style = line.style_dashed, width = 1, extend = extend.both)
+    line.new(bar_index + 1, close, bar_index + 51, close, color = color.new(color.blue, 50), style = line.style_solid, width = 1, extend = extend.none)
+    label.new(x=bar_index + 1, y=close, color=color.blue, textcolor=color.white, style=label.style_label_left, size=size.small, text = "롱 " + str.tostring(close))
+
+    // // 손절 지정
+    // line.new(bar_index + 1, close * long_minus_time, bar_index + 100, close * long_minus_time, color = color.new(color.blue, 80), width = 1, style=line.style_dotted)
+    // label.new(x=bar_index + 1, y=close * long_minus_time, color=color.new(color.blue, 80), textcolor=color.white, style=label.style_label_up, size=size.small, text = "손절 " + str.tostring(close * long_minus_time))
+
+    // // 익절 지정
+    // line.new(bar_index + 1, close * long_plus_time, bar_index + 100, close * long_plus_time, color = color.new(color.blue, 80), width = 1, style=line.style_dotted)
+    // label.new(x=bar_index + 1, y=close * long_plus_time, color=color.new(color.blue, 80), textcolor=color.white, style=label.style_label_down, size=size.small, text = "익절 " + str.tostring(close * long_plus_time))
+
+else if short_position_02 and short_position_01
+    line.new(bar_index, close, bar_index, close * 0.01, color = color.new(color.orange, 50), style = line.style_dashed, width = 1, extend = extend.both)
+    line.new(bar_index + 1, close, bar_index + 51, close, color = color.new(color.orange, 50), style = line.style_solid, width = 1, extend = extend.none)
+    label.new(x=bar_index + 1, y=close, color=color.orange, textcolor=color.white, style=label.style_label_left, size=size.small, text = "숏 " + str.tostring(close))
+
+    // // 손절 지정
+    // line.new(bar_index + 1, close * short_minus_time, bar_index + 100, close * short_minus_time, color = color.new(color.orange, 80), width = 1, style=line.style_dotted)
+    // label.new(x=bar_index + 1, y=close * short_minus_time, color=color.new(color.orange, 80), textcolor=color.white, style=label.style_label_down, size=size.small, text = "손절 " + str.tostring(close * short_minus_time))
+
+    // // 익절 지정
+    // line.new(bar_index + 1, close * short_plus_time, bar_index + 100, close * short_plus_time, color = color.new(color.orange, 80), width = 1, style=line.style_dotted)
+    // label.new(x=bar_index + 1, y=close * short_plus_time, color=color.new(color.orange, 80), textcolor=color.white, style=label.style_label_up, size=size.small, text = "익절 " + str.tostring(close * short_plus_time))
+
+
+plot(ta.vwma(close, val_01), color=color.new(color.red, 50), style = plot.style_line, linewidth = 1, title="VWMA_05")
+plot(ta.vwma(close, val_02), color=color.new(color.orange, 50), style = plot.style_line, linewidth = 1, title="VWMA_10")
+plot(ta.vwma(close, val_03), color=color.new(color.yellow, 50), style = plot.style_line, linewidth = 1, title="VWMA_20")
+plot(ta.vwma(close, val_04), color=color.new(color.green, 50), style = plot.style_line, linewidth = 1, title="VWMA_60")
+plot(ta.vwma(close, val_05), color=color.new(color.blue, 50), style = plot.style_line, linewidth = 1, title="VWMA_120")
+plot(ta.vwma(close, val_06), color=color.new(color.navy, 50), style = plot.style_line, linewidth = 1, title="VWMA_200")
+plot(ta.vwma(close, val_07), color=color.new(color.purple, 50), style = plot.style_line, linewidth = 1, title="VWMA_300")
+
+plot(ta.sma(close, val_01), color=color.new(color.red, 50), style = plot.style_cross, linewidth = 1, title="SMA_05", display = display.none)
+plot(ta.sma(close, val_02), color=color.new(color.orange, 50), style = plot.style_cross, linewidth = 1, title="SMA_10", display = display.none)
+plot(ta.sma(close, val_03), color=color.new(color.yellow, 50), style = plot.style_cross, linewidth = 1, title="SMA_20", display = display.none)
+plot(ta.sma(close, val_04), color=color.new(color.green, 50), style = plot.style_cross, linewidth = 1, title="SMA_60", display = display.none)
+plot(ta.sma(close, val_05), color=color.new(color.blue, 50), style = plot.style_cross, linewidth = 1, title="SMA_120", display = display.none)
+plot(ta.sma(close, val_06), color=color.new(color.navy, 50), style = plot.style_cross, linewidth = 1, title="SMA_200", display = display.none)
+plot(ta.sma(close, val_07), color=color.new(color.purple, 50), style = plot.style_cross, linewidth = 1, title="SMA_300", display = display.none)
+
+plot(ta.wma(close, val_01), color=color.new(color.red, 50), style = plot.style_circles, linewidth = 1, title="WMA_05", display = display.none)
+plot(ta.wma(close, val_02), color=color.new(color.orange, 50), style = plot.style_circles, linewidth = 1, title="WMA_10", display = display.none)
+plot(ta.wma(close, val_03), color=color.new(color.yellow, 50), style = plot.style_circles, linewidth = 1, title="WMA_20", display = display.none)
+plot(ta.wma(close, val_04), color=color.new(color.green, 50), style = plot.style_circles, linewidth = 1, title="WMA_60", display = display.none)
+plot(ta.wma(close, val_05), color=color.new(color.blue, 50), style = plot.style_circles, linewidth = 1, title="WMA_120", display = display.none)
+plot(ta.wma(close, val_06), color=color.new(color.navy, 50), style = plot.style_circles, linewidth = 1, title="WMA_200", display = display.none)
+plot(ta.wma(close, val_07), color=color.new(color.purple, 50), style = plot.style_circles, linewidth = 1, title="WMA_300", display = display.none)
+
+
+
+
+
+
+
+// --------- ALERTS --------- //
+long_push = ta.crossover(ta.ema(close, val_01), ta.ema(close, val_04))
+short_push = ta.crossunder(ta.ema(close, val_01), ta.ema(close, val_04))
+
+alertcondition(long_push, title = "롱", message = "롱 시그널")
+alertcondition(short_push, title = "숏", message = "숏 시그널")
